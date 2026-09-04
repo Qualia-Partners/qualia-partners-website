@@ -197,7 +197,6 @@ a{color:inherit;text-decoration:none;}
   font-size:11.5px;font-weight:750;letter-spacing:0.14em;text-transform:uppercase;color:rgba(18,58,115,0.68);
 }
 .group-label:after{content:"";flex:1;height:1px;background:var(--line);}
-.group-note{margin:-8px 0 16px;font-size:13px;line-height:1.65;color:rgba(11,15,26,0.45);max-width:70ch;}
 
 .people-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
 
