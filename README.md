@@ -13,6 +13,12 @@ runs its existing Python builder, and publishes the reading page alongside the
 website. No generated book copy is committed here. No cross-repository write
 token, account transfer, or book-side workflow is required: the book is public.
 
+The audiobook is generated in the book repository. The workflow fetches its
+`audio/` directory; the site build publishes only the manifest and the MP3 it
+references, and only when the book builder includes the audio player. Narration
+is not regenerated in CI. The book builder hides narration after a manuscript
+change until a matching recording has been generated and committed.
+
 Deployment runs:
 
 - On a push to this website's `main` branch.

@@ -77,8 +77,21 @@ def build(book, output):
         (source / 'site').mkdir()
         for name in ('build.py', 'style.css', 'app.js'):
             shutil.copy2(book / 'site' / name, source / 'site' / name)
+        # Only the manifest and its referenced recording are public audio inputs.
+        # Caches, narration tooling and working material never enter the site.
+        audio_manifest = book / 'audio/manifest.json'
+        if audio_manifest.is_file():
+            manifest = json.loads(audio_manifest.read_text())
+            filename = manifest['file']
+            if Path(filename).name != filename or not filename.endswith('.mp3'):
+                raise ValueError('Invalid audiobook filename')
+            (source / 'audio').mkdir()
+            shutil.copy2(audio_manifest, source / 'audio/manifest.json')
+            shutil.copy2(book / 'audio' / filename, source / 'audio' / filename)
         subprocess.run([sys.executable, str(source / 'site/build.py')], check=True)
         text = (source / 'peopling_book.html').read_text()
+        if 'id="book-audio"' in text:
+            shutil.copytree(source / 'audio', output / 'peopling/audio')
     text = replace_once(text, '<title>Peopling</title>', '<title>Peopling by Stefan van der Wel | Qualia Partners</title>')
     text = replace_once(text, '</head>', f'''<link rel="canonical" href="{CANONICAL}">
 <meta property="og:title" content="Peopling by Stefan van der Wel">
@@ -93,7 +106,7 @@ def build(book, output):
     text = replace_once(text, '<p class="tp-author">Stefan van der Wel</p>', '<p class="tp-author">Stefan van der Wel</p>\n' + home)
     if '@@FIGURE' in text:
         raise ValueError('Unrendered figure token in book')
-    (output / 'peopling').mkdir()
+    (output / 'peopling').mkdir(exist_ok=True)
     (output / 'peopling/index.html').write_text(text)
     shutil.copy2(ROOT / 'scripts/peopling.css', output / 'peopling/qualia.css')
     revision = subprocess.check_output(['git', '-C', str(book), 'rev-parse', 'HEAD'], text=True).strip()

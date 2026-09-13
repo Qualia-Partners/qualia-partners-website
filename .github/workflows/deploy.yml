@@ -34,6 +34,7 @@ jobs:
             peopling_book.md
             images
             site
+            audio
           sparse-checkout-cone-mode: false
 
       - uses: actions/setup-python@v5
