@@ -39,6 +39,7 @@ class Page(HTMLParser):
 
 
 def validate(output):
+    output = output.resolve()
     pages = {p: Page(p.read_text()) for p in output.rglob('*.html')}
     for path, page in pages.items():
         for link in page.links:
@@ -62,6 +63,7 @@ def validate(output):
 
 
 def build(book, output):
+    book, output = book.resolve(), output.resolve()
     # Refuse to mix generated output with sources or a previous build.
     output.mkdir(parents=True, exist_ok=False)
     # Explicit public site files only: never publish Git data, build tools or working notes.
