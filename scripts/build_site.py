@@ -38,7 +38,7 @@ class Page(HTMLParser):
                 self.links.append(attrs[key])
 
 
-def validate(output):
+def validate(output, expected_figures):
     output = output.resolve()
     pages = {p: Page(p.read_text()) for p in output.rglob('*.html')}
     for path, page in pages.items():
@@ -57,7 +57,7 @@ def validate(output):
                 raise ValueError(f'Broken section link in {path.name}: {link}')
     book = pages[output / 'peopling/index.html']
     required = {f'ch{i}' for i in range(1, 9)} | {'overview', 'epilogue', 'appendix'}
-    if not required <= book.ids or book.figures < 10:
+    if not required <= book.ids or book.figures != expected_figures:
         raise ValueError('Book is missing chapters or figures')
     print(f'Validated {len(pages)} pages, all local links, 8 chapters and {book.figures} figures')
 
@@ -111,7 +111,8 @@ def build(book, output):
     shutil.copy2(ROOT / 'scripts/peopling.css', output / 'peopling/qualia.css')
     revision = subprocess.check_output(['git', '-C', str(book), 'rev-parse', 'HEAD'], text=True).strip()
     (output / 'peopling/source.json').write_text(json.dumps({'repository': 'Dixie-Flatl1ne/peopling-book', 'commit': revision}) + '\n')
-    validate(output)
+    expected_figures = sum(line.startswith('![') for line in (book / 'peopling_book.md').read_text().splitlines())
+    validate(output, expected_figures)
     print(f'Built {CANONICAL} from book commit {revision}')
 
 
