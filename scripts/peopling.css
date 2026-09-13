@@ -1,0 +1,12 @@
+/* Keep the book's reading layout while providing a way back to Qualia. */
+.qualia-home {
+  display: inline-block;
+  font-family: var(--ui);
+  font-size: .8rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.qualia-home:hover { color: var(--accent); text-decoration: underline; }
+.titlepage > .qualia-home { margin: 0 0 1.5rem; }
+@media print { .qualia-home { display: none; } }

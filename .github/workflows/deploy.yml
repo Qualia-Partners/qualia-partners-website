@@ -3,31 +3,62 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Refresh the book independently of website commits. Avoid the busy hour boundary.
+    - cron: '17 * * * *'
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Read the latest published manuscript
+        uses: actions/checkout@v4
+        with:
+          repository: Dixie-Flatl1ne/peopling-book
+          ref: main
+          path: .book-source
+          persist-credentials: false
+          sparse-checkout: |
+            peopling_book.md
+            images
+            site
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: python -m pip install -r scripts/requirements.txt
+
+      - name: Build website and book
+        run: python scripts/build_site.py --book .book-source --output _site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
   deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       - uses: actions/configure-pages@v4
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-
       - id: deployment
         uses: actions/deploy-pages@v4
-
