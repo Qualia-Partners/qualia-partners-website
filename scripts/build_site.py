@@ -111,6 +111,18 @@ def build(book, output):
     shutil.copy2(ROOT / 'scripts/peopling.css', output / 'peopling/qualia.css')
     revision = subprocess.check_output(['git', '-C', str(book), 'rev-parse', 'HEAD'], text=True).strip()
     (output / 'peopling/source.json').write_text(json.dumps({'repository': 'Dixie-Flatl1ne/peopling-book', 'commit': revision}) + '\n')
+    # Central injection includes the freshly generated book on every scheduled build.
+    analytics = (ROOT / 'scripts/plausible.html').read_text().strip()
+    if '<script' in analytics:
+        shutil.copy2(ROOT / 'analytics.js', output / 'analytics.js')
+        for page in output.rglob('*.html'):
+            content = page.read_text()
+            if content.count('</head>') != 1:
+                raise ValueError(f'Expected one head in {page}')
+            content = content.replace('</head>', analytics + '\n<script defer src="/analytics.js"></script>\n</head>', 1)
+            page.write_text(content)
+    else:
+        print('Plausible is not configured; analytics disabled')
     expected_figures = sum(line.startswith('![') for line in (book / 'peopling_book.md').read_text().splitlines())
     validate(output, expected_figures)
     print(f'Built {CANONICAL} from book commit {revision}')
